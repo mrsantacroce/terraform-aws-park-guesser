@@ -38,18 +38,21 @@ module "ecs" {
   container_name = "park-guesser-app"
 
   # Initial placeholder image
-  container_image = "${local.account_id}.dkr.ecr.${var.region}.amazonaws.com/${local.project_name}:latest"
+  container_image = "${local.account_id}.dkr.ecr.${var.region}.amazonaws.com/${local.project_name}:${var.ecr_image_tag}"
   container_port  = 3000
 
   # Fargate configuration
   task_cpu       = "256"
   task_memory_mb = "512"
-  desired_count  = 0 # Set to 0 initially because Docker image is not yet in ECR
+  desired_count  = 1 # Set to 0 initially because Docker image is not yet in ECR
 
   # Networking - use our VPC
   vpc_id           = module.vpc.vpc_id
   subnet_ids       = [module.vpc.public_subnet_id]
   assign_public_ip = true
+
+  # Security - only allow access from home network
+  allowed_cidr_blocks = ["98.97.118.0/24"]
 
   # Grant S3 access to ECS tasks
   s3_bucket_arn = module.s3.bucket_arn
@@ -59,4 +62,22 @@ module "ecs" {
     Project     = local.project_name
     ManagedBy   = "terraform"
   }
+}
+
+# CloudWatch Alarm Module
+module "cloudwatch_alarm" {
+  source = "../../modules/cloudwatch-alarm"
+
+  log_group_name     = "/aws/ecs/park-guesser"
+  retention_days     = 7
+  alarm_name         = "${local.project_name}-hint-usage-alarm"
+  metric_name        = "HintUsageCount"
+  metric_namespace   = "ParkGuesser"
+  threshold          = 1
+  period             = 300 # 5 minutes
+  evaluation_periods = 1
+  environment        = "dev"
+
+  # Optional: Add SNS topic ARN here for email notifications
+  # alarm_actions = [aws_sns_topic.alerts.arn]
 }
