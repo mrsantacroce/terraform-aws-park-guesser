@@ -54,5 +54,6 @@ jobs:
         run: terraform plan -out=plan.tfplan
 
       - name: Terraform Apply
+        working-directory: terraform/environments/dev
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: terraform apply -auto-approve plan.tfplan
