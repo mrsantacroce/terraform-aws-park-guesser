@@ -38,13 +38,13 @@ module "ecs" {
   container_name = "park-guesser-app"
 
   # Initial placeholder image
-  container_image = "${local.account_id}.dkr.ecr.${var.region}.amazonaws.com/${local.project_name}:latest"
+  container_image = "${local.account_id}.dkr.ecr.${var.region}.amazonaws.com/${local.project_name}:f3db13f"
   container_port  = 3000
 
   # Fargate configuration
   task_cpu       = "256"
   task_memory_mb = "512"
-  desired_count  = 0 # Set to 0 initially because Docker image is not yet in ECR
+  desired_count  = 1 # Set to 0 initially because Docker image is not yet in ECR
 
   # Networking - use our VPC
   vpc_id           = module.vpc.vpc_id
