@@ -1,0 +1,58 @@
+name: Terraform Bootstrap Updates
+
+# This workflow only works AFTER initial local bootstrap deployment
+# It uses an OIDC role that was created during bootstrap, Matt to share repo
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: ["main"]
+  push:
+    branches: ["main"]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-east-1
+          role-to-assume: ${{ vars.AWS_IAM_GHA_DEPLOY_ROLE_ARN }}
+          role-session-name: ${{ github.event.repository.name }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ~> 1.9.0
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Test - S3 Module
+        working-directory: terraform/modules/s3-bucket
+        run: |
+          terraform init -backend=false
+          terraform test
+
+      - name: Terraform Init
+        working-directory: terraform/environments/dev
+        run: terraform init
+
+      - name: Terraform Validate
+        working-directory: terraform/environments/dev
+        run: terraform validate
+
+      - name: Terraform Plan
+        working-directory: terraform/environments/dev
+        run: terraform plan -out=plan.tfplan
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -auto-approve plan.tfplan
