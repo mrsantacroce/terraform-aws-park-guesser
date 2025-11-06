@@ -75,6 +75,6 @@ module "cloudwatch_alarm" {
   evaluation_periods = 1
   environment        = "dev"
 
-  # Optional: Add SNS topic ARN here if you want email notifications
+  # Optional: Add SNS topic ARN here for email notifications
   # alarm_actions = [aws_sns_topic.alerts.arn]
 }
