@@ -66,3 +66,24 @@ resource "aws_iam_role_policy" "ecs_task_s3_policy" {
     ]
   })
 }
+
+# Add Bedrock access for hint generation
+resource "aws_iam_role_policy" "ecs_task_bedrock_policy" {
+  name = "${var.service_name}-bedrock-access"
+  role = aws_iam_role.ecs_task_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "bedrock:InvokeModel"
+        ]
+        Resource = [
+          "arn:aws:bedrock:${var.region}::foundation-model/amazon.titan-text-express-v1"
+        ]
+      }
+    ]
+  })
+}
