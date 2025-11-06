@@ -28,9 +28,14 @@ export async function POST(request) {
     }
 
     // Create prompt for Bedrock Titan
-    const prompt = `Generate a helpful hint for someone trying to guess the national park: ${parkName}.
-The hint should be interesting and give clues about the park's features, location, or characteristics without directly naming it.
-Keep the hint to 1-2 sentences.
+    const prompt = `You are helping someone guess a national park in a game. Generate a helpful hint about ${parkName}.
+
+CRITICAL RULES:
+- DO NOT mention "${parkName}" or any part of its name in your response
+- DO NOT mention the state name if it's part of the park name (e.g., for "Yellowstone", don't say Wyoming/Montana/Idaho)
+- Give clues about unique features, geological formations, wildlife, or historical significance
+- Keep the hint to 1-2 sentences
+- Make the hint challenging but fair
 
 Hint:`;
 
