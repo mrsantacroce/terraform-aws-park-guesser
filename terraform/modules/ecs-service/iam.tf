@@ -87,3 +87,26 @@ resource "aws_iam_role_policy" "ecs_task_bedrock_policy" {
     ]
   })
 }
+
+# Add CloudWatch Logs permissions for hint usage logging
+resource "aws_iam_role_policy" "ecs_task_cloudwatch_logs_policy" {
+  name = "${var.service_name}-cloudwatch-logs-access"
+  role = aws_iam_role.ecs_task_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:DescribeLogStreams"
+        ]
+        Resource = [
+          "arn:aws:logs:${var.region}:*:log-group:/aws/ecs/park-guesser:*"
+        ]
+      }
+    ]
+  })
+}

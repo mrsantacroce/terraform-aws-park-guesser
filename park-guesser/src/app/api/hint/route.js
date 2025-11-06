@@ -1,4 +1,5 @@
 import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
+import { CloudWatchLogsClient, PutLogEventsCommand, CreateLogStreamCommand, DescribeLogStreamsCommand } from "@aws-sdk/client-cloudwatch-logs";
 import { fromIni } from "@aws-sdk/credential-providers";
 import { NextResponse } from "next/server";
 
@@ -15,6 +16,61 @@ if (process.env.AWS_PROFILE) {
 }
 
 const client = new BedrockRuntimeClient(clientConfig);
+const logsClient = new CloudWatchLogsClient(clientConfig);
+
+// CloudWatch Logs configuration
+const LOG_GROUP_NAME = "/aws/ecs/park-guesser";
+const LOG_STREAM_NAME = `hints/${new Date().toISOString().split('T')[0]}`; // Daily log stream
+
+// Helper function to log hint usage to CloudWatch
+async function logHintUsage(parkName, hint) {
+  try {
+    // Try to create the log stream (will fail if it already exists, which is fine)
+    try {
+      await logsClient.send(new CreateLogStreamCommand({
+        logGroupName: LOG_GROUP_NAME,
+        logStreamName: LOG_STREAM_NAME,
+      }));
+    } catch (err) {
+      // Stream already exists, continue
+    }
+
+    // Get the sequence token for the log stream
+    const describeResponse = await logsClient.send(new DescribeLogStreamsCommand({
+      logGroupName: LOG_GROUP_NAME,
+      logStreamNamePrefix: LOG_STREAM_NAME,
+    }));
+
+    const sequenceToken = describeResponse.logStreams?.[0]?.uploadSequenceToken;
+
+    // Put the log event
+    const logEvent = {
+      logGroupName: LOG_GROUP_NAME,
+      logStreamName: LOG_STREAM_NAME,
+      logEvents: [
+        {
+          message: JSON.stringify({
+            event: "HINT_USED",
+            parkName,
+            hint,
+            timestamp: new Date().toISOString(),
+          }),
+          timestamp: Date.now(),
+        },
+      ],
+    };
+
+    if (sequenceToken) {
+      logEvent.sequenceToken = sequenceToken;
+    }
+
+    await logsClient.send(new PutLogEventsCommand(logEvent));
+    console.log("Hint usage logged to CloudWatch");
+  } catch (error) {
+    console.error("Failed to log to CloudWatch:", error);
+    // Don't fail the request if logging fails
+  }
+}
 
 export async function POST(request) {
   try {
@@ -62,6 +118,9 @@ Hint:`;
 
     // Extract the hint from the response
     const hint = responseBody.results[0].outputText.trim();
+
+    // Log hint usage to CloudWatch
+    await logHintUsage(parkName, hint);
 
     return NextResponse.json({ hint, parkName });
   } catch (error) {

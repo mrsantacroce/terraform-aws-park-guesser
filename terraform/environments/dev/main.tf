@@ -60,3 +60,21 @@ module "ecs" {
     ManagedBy   = "terraform"
   }
 }
+
+# CloudWatch Alarm Module
+module "cloudwatch_alarm" {
+  source = "../../modules/cloudwatch-alarm"
+
+  log_group_name     = "/aws/ecs/park-guesser"
+  retention_days     = 7
+  alarm_name         = "${local.project_name}-hint-usage-alarm"
+  metric_name        = "HintUsageCount"
+  metric_namespace   = "ParkGuesser"
+  threshold          = 1
+  period             = 300 # 5 minutes
+  evaluation_periods = 1
+  environment        = "dev"
+
+  # Optional: Add SNS topic ARN here if you want email notifications
+  # alarm_actions = [aws_sns_topic.alerts.arn]
+}
