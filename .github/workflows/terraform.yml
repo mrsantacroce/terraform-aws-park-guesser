@@ -36,17 +36,19 @@ jobs:
         run: terraform fmt -check -recursive
 
       - name: Terraform Validate
+        working-directory: terraform
         run: terraform validate
 
-      - name: S3 Module - Init and Test
+      - name: Terraform Test - S3 Module
         working-directory: terraform/modules/s3-bucket
         run: |
           terraform init -backend=false
           terraform test
 
-      - name: Root - Init and Validate
-        run: |
-          terraform init
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init
 
       - name: Terraform Plan
+        working-directory: terraform
         run: terraform plan -out=plan.tfplan
