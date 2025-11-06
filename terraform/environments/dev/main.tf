@@ -38,7 +38,7 @@ module "ecs" {
   container_name = "park-guesser-app"
 
   # Initial placeholder image
-  container_image = "${local.account_id}.dkr.ecr.${var.region}.amazonaws.com/${local.project_name}:f3db13f"
+  container_image = "${local.account_id}.dkr.ecr.${var.region}.amazonaws.com/${local.project_name}:${var.ecr_image_tag}"
   container_port  = 3000
 
   # Fargate configuration
