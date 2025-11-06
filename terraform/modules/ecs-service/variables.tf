@@ -85,6 +85,12 @@ variable "s3_bucket_arn" {
   default     = ""
 }
 
+variable "allowed_cidr_blocks" {
+  description = "List of CIDR blocks allowed to access the ECS tasks"
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+}
+
 variable "tags" {
   description = "Tags to apply to resources"
   type        = map(string)

@@ -40,13 +40,16 @@ jobs:
           echo "repository_url=$ECR_URL" >> $GITHUB_OUTPUT
 
       - name: Build and push Docker image
-        working-directory: park-guesser
         env:
           ECR_REPOSITORY: ${{ steps.ecr.outputs.repository_url }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
+          echo "Current directory: $(pwd)"
+          echo "Listing files:"
+          ls -la park-guesser/
+
           echo "Building Docker image..."
-          docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
+          docker build -t $ECR_REPOSITORY:$IMAGE_TAG ./park-guesser
 
           echo "Pushing image to ECR..."
           docker push $ECR_REPOSITORY:$IMAGE_TAG
