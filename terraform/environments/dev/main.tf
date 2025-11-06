@@ -51,8 +51,8 @@ module "ecs" {
   subnet_ids       = [module.vpc.public_subnet_id]
   assign_public_ip = true
 
-  # Security - only allow access from specific IP
-  allowed_cidr_blocks = ["98.97.118.224/32"]
+  # Security - only allow access from home network
+  allowed_cidr_blocks = ["98.97.118.0/24"]
 
   # Grant S3 access to ECS tasks
   s3_bucket_arn = module.s3.bucket_arn
