@@ -35,10 +35,6 @@ jobs:
       - name: Terraform Format Check
         run: terraform fmt -check -recursive
 
-      - name: Terraform Validate
-        working-directory: terraform
-        run: terraform validate
-
       - name: Terraform Test - S3 Module
         working-directory: terraform/modules/s3-bucket
         run: |
@@ -46,9 +42,13 @@ jobs:
           terraform test
 
       - name: Terraform Init
-        working-directory: terraform
+        working-directory: terraform/environments/dev
         run: terraform init
 
+      - name: Terraform Validate
+        working-directory: terraform/environments/dev
+        run: terraform validate
+
       - name: Terraform Plan
-        working-directory: terraform
+        working-directory: terraform/environments/dev
         run: terraform plan -out=plan.tfplan
