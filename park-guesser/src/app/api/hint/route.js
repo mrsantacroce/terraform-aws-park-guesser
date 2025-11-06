@@ -1,12 +1,20 @@
 import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
+import { fromIni } from "@aws-sdk/credential-providers";
 import { NextResponse } from "next/server";
 
 // Initialize Bedrock client
 // When running in ECS, it will automatically use the IAM role
-// For local development, use AWS_PROFILE environment variable
-const client = new BedrockRuntimeClient({
+// For local development, use AWS_PROFILE from .env.local
+const clientConfig = {
   region: process.env.AWS_REGION || "us-east-1",
-});
+};
+
+// If AWS_PROFILE is set (local dev), use profile credentials
+if (process.env.AWS_PROFILE) {
+  clientConfig.credentials = fromIni({ profile: process.env.AWS_PROFILE });
+}
+
+const client = new BedrockRuntimeClient(clientConfig);
 
 export async function POST(request) {
   try {
