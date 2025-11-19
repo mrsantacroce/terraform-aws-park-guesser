@@ -30,6 +30,7 @@ The Park Guesser application is a serverless web application that uses Amazon Be
 │  │  │  │        Next.js App (Node 22)                     │  │  │  │
 │  │  │  │        - React Frontend                          │  │  │  │
 │  │  │  │        - /api/hint endpoint                      │  │  │  │
+│  │  │  │        - /api/parks endpoint                     │  │  │  │
 │  │  │  │        - Port 3000                               │  │  │  │
 │  │  │  └──────────────────────────────────────────────────┘  │  │  │
 │  │  │                                                        │  │  │
