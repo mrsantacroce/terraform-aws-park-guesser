@@ -14,3 +14,6 @@ A National Park guessing game hosted on AWS ECS, deployed with Terraform (integr
 - Better application styling and functionality
 - Better error handling
 - Add more parks!
+
+## Sources
+- Images from https://www.nps.gov/
