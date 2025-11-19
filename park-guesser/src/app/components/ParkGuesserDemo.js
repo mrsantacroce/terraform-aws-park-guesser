@@ -1,22 +1,36 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getRandomParkQuestion } from "../data/parks";
+import { fetchParksData, getRandomParkQuestion } from "../data/parks";
 import HintButton from "./HintButton";
 
 export default function ParkGuesserDemo() {
+  const [parksData, setParksData] = useState(null);
   const [question, setQuestion] = useState(null);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [isCorrect, setIsCorrect] = useState(null);
   const [showAnswer, setShowAnswer] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Load a new question on mount
+  // Load parks data on mount
   useEffect(() => {
-    loadNewQuestion();
+    loadParksData();
   }, []);
 
-  const loadNewQuestion = () => {
-    const newQuestion = getRandomParkQuestion();
+  const loadParksData = async () => {
+    try {
+      const parks = await fetchParksData();
+      setParksData(parks);
+      loadNewQuestion(parks);
+    } catch (err) {
+      setError("Failed to load parks data. Please refresh the page.");
+      console.error(err);
+    }
+  };
+
+  const loadNewQuestion = (parks = parksData) => {
+    if (!parks) return;
+    const newQuestion = getRandomParkQuestion(parks);
     setQuestion(newQuestion);
     setSelectedAnswer(null);
     setIsCorrect(null);
@@ -36,8 +50,25 @@ export default function ParkGuesserDemo() {
     setShowAnswer(true);
   };
 
-  if (!question) {
-    return <div>Loading...</div>;
+  if (error) {
+    return (
+      <div className="error-container">
+        <p>{error}</p>
+        <style jsx>{`
+          .error-container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+            color: #ef4444;
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  if (!question || !parksData) {
+    return <div>Loading parks data...</div>;
   }
 
   return (
