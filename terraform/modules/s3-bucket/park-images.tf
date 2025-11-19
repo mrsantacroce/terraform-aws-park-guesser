@@ -6,12 +6,12 @@ locals {
   park_images_path = "${path.module}/../../../park-images"
 
   park_images = {
-    "arches.jpg"          = "arches.jpg"
-    "canyonlands.jpg"     = "canyonlands.jpg"
-    "denali.jpg"          = "denali.jpg"
-    "glacier.jpg"         = "glacier.jpg"
-    "rocky-mountain.jpg"  = "rocky-mountain.jpg"
-    "yosemite.jpg"        = "yosemite.jpg"
+    "arches.jpg"         = "arches.jpg"
+    "canyonlands.jpg"    = "canyonlands.jpg"
+    "denali.jpg"         = "denali.jpg"
+    "glacier.jpg"        = "glacier.jpg"
+    "rocky-mountain.jpg" = "rocky-mountain.jpg"
+    "yosemite.jpg"       = "yosemite.jpg"
   }
 }
 
