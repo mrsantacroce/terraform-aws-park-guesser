@@ -1,46 +1,23 @@
-// Sample national parks data
-// In production, images would come from your S3 bucket
-export const nationalParks = [
-  {
-    id: 1,
-    name: "Yellowstone National Park",
-    imageUrl: "https://images.unsplash.com/photo-1585421514738-01798e348b17?w=800&q=80",
-    state: "Wyoming, Montana, Idaho",
-  },
-  {
-    id: 2,
-    name: "Yosemite National Park",
-    imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80",
-    state: "California",
-  },
-  {
-    id: 3,
-    name: "Grand Canyon National Park",
-    imageUrl: "https://images.unsplash.com/photo-1474044159687-1ee9f3a51722?w=800&q=80",
-    state: "Arizona",
-  },
-  {
-    id: 4,
-    name: "Zion National Park",
-    imageUrl: "https://images.unsplash.com/photo-1626371376480-1937744f8a49?w=800&q=80",
-    state: "Utah",
-  },
-  {
-    id: 5,
-    name: "Glacier National Park",
-    imageUrl: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&q=80",
-    state: "Montana",
-  },
-  {
-    id: 6,
-    name: "Rocky Mountain National Park",
-    imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80",
-    state: "Colorado",
-  },
-];
+// Fetch parks data with presigned S3 URLs from API
+export async function fetchParksData() {
+  try {
+    const response = await fetch('/api/parks');
+    if (!response.ok) {
+      throw new Error('Failed to fetch parks data');
+    }
+    const data = await response.json();
+    return {
+      parks: data.parks,      // Parks with images
+      allParks: data.allParks // All parks (including decoys)
+    };
+  } catch (error) {
+    console.error('Error fetching parks:', error);
+    throw error;
+  }
+}
 
 // Get a random park with wrong options for multiple choice
-export function getRandomParkQuestion() {
+export function getRandomParkQuestion(nationalParks) {
   const correctPark = nationalParks[Math.floor(Math.random() * nationalParks.length)];
 
   // Get 3 random wrong answers

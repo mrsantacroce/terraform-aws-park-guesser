@@ -52,10 +52,22 @@ module "ecs" {
   assign_public_ip = true
 
   # Security - only allow access from home network
-  allowed_cidr_blocks = ["98.97.118.0/24"]
+  allowed_cidr_blocks = ["98.97.112.0/24"]
 
   # Grant S3 access to ECS tasks
   s3_bucket_arn = module.s3.bucket_arn
+
+  # Environment variables for the container
+  environment_variables = [
+    {
+      name  = "AWS_REGION"
+      value = var.region
+    },
+    {
+      name  = "S3_BUCKET_NAME"
+      value = module.s3.bucket_name
+    }
+  ]
 
   tags = {
     Environment = "dev"

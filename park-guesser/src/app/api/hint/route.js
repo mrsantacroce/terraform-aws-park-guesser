@@ -83,17 +83,23 @@ export async function POST(request) {
       );
     }
 
-    // Create prompt for Bedrock Titan
-    const prompt = `You are helping someone guess a national park in a game. Generate a helpful hint about ${parkName}.
+    // Extract the main park name (without "National Park")
+    const parkBaseName = parkName.replace(' National Park', '');
 
-CRITICAL RULES:
-- DO NOT mention "${parkName}" or any part of its name in your response
-- DO NOT mention the state name if it's part of the park name (e.g., for "Yellowstone", don't say Wyoming/Montana/Idaho)
+    // Create prompt for Bedrock Titan
+    const prompt = `You are helping someone guess a national park in a game. The park is ${parkName}.
+
+CRITICAL RULES - YOU MUST FOLLOW THESE:
+- NEVER write the words "${parkBaseName}" or "${parkName}" in your response
+- DO NOT say "this park" or reference the park's name directly
+- DO NOT include phrases like "hint about [park name]"
 - Give clues about unique features, geological formations, wildlife, or historical significance
-- Keep the hint to 1-2 sentences
+- Keep the hint to 1-2 sentences maximum
 - Make the hint challenging but fair
 
-Hint:`;
+Example good hint: "Named after a local tribe, this location features dramatic red rock formations and over 2,000 natural stone arches."
+
+Generate only the hint, nothing else:`;
 
     // Prepare the request for Amazon Titan Text Express
     const payload = {
@@ -117,7 +123,20 @@ Hint:`;
     const responseBody = JSON.parse(new TextDecoder().decode(response.body));
 
     // Extract the hint from the response
-    const hint = responseBody.results[0].outputText.trim();
+    let hint = responseBody.results[0].outputText.trim();
+
+    // Validate that the hint doesn't contain the park name
+    const hintLower = hint.toLowerCase();
+    const parkBaseNameLower = parkBaseName.toLowerCase();
+    const parkNameLower = parkName.toLowerCase();
+
+    // Check if hint contains the park name
+    if (hintLower.includes(parkBaseNameLower) || hintLower.includes(parkNameLower)) {
+      console.error(`AI violated rules - hint contains park name "${parkName}". Original hint: ${hint}`);
+
+      // Return a safe generic hint
+      hint = "This location is known for its breathtaking landscapes and unique natural features. Think about the distinctive characteristics that make it famous!";
+    }
 
     // Log hint usage to CloudWatch
     await logHintUsage(parkName, hint);

@@ -16,7 +16,7 @@ The Park Guesser application is a serverless web application that uses Amazon Be
                                 ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │                        Security Group                               │
-│                  (98.97.118.0/24 - Home Network)                    │
+│                  (98.97.112.0/24 - Home Network)                    │
 └───────────────────────────────┬─────────────────────────────────────┘
                                 │
                                 ▼
@@ -30,6 +30,7 @@ The Park Guesser application is a serverless web application that uses Amazon Be
 │  │  │  │        Next.js App (Node 22)                     │  │  │  │
 │  │  │  │        - React Frontend                          │  │  │  │
 │  │  │  │        - /api/hint endpoint                      │  │  │  │
+│  │  │  │        - /api/parks endpoint                     │  │  │  │
 │  │  │  │        - Port 3000                               │  │  │  │
 │  │  │  └──────────────────────────────────────────────────┘  │  │  │
 │  │  │                                                        │  │  │
@@ -50,7 +51,7 @@ The Park Guesser application is a serverless web application that uses Amazon Be
     │   Amazon Bedrock     │        │    Amazon S3         │
     │                      │        │                      │
     │  Titan Text Express  │        │  Park Images Bucket  │
-    │  (AI Hint Generation)│        │  (Optional)          │
+    │  (AI Hint Generation)│        │                      │
     └──────────────────────┘        └──────────────────────┘
                  │
                  ▼

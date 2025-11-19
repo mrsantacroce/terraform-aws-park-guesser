@@ -27,3 +27,15 @@ output "block_public_acls" {
   description = "Whether public ACLs are blocked for the bucket."
   value       = try(aws_s3_bucket_public_access_block.this.block_public_acls, false)
 }
+
+output "bucket_region" {
+  description = "The AWS region of the S3 bucket."
+  value       = var.region
+}
+
+output "park_image_keys" {
+  description = "Map of park image S3 object keys"
+  value = {
+    for k, v in aws_s3_object.park_images : k => v.key
+  }
+}

@@ -1,30 +1,74 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getRandomParkQuestion } from "../data/parks";
+import { fetchParksData } from "../data/parks";
 import HintButton from "./HintButton";
 
 export default function ParkGuesserDemo() {
+  const [parksData, setParksData] = useState(null);
+  const [allParksData, setAllParksData] = useState(null); // Includes decoys
   const [question, setQuestion] = useState(null);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [isCorrect, setIsCorrect] = useState(null);
   const [showAnswer, setShowAnswer] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Load a new question on mount
+  // Game state
+  const [remainingParks, setRemainingParks] = useState([]);
+  const [currentRound, setCurrentRound] = useState(0);
+  const [score, setScore] = useState(0);
+  const [gameComplete, setGameComplete] = useState(false);
+
+  // Load parks data on mount
   useEffect(() => {
-    loadNewQuestion();
+    loadParksData();
   }, []);
 
-  const loadNewQuestion = () => {
-    const newQuestion = getRandomParkQuestion();
-    setQuestion(newQuestion);
+  const loadParksData = async () => {
+    try {
+      const data = await fetchParksData();
+      setParksData(data.parks);        // Parks with images
+      setAllParksData(data.allParks);  // All parks (including decoys)
+      startNewGame(data.parks, data.allParks);
+    } catch (err) {
+      setError("Failed to load parks data. Please refresh the page.");
+      console.error(err);
+    }
+  };
+
+  const startNewGame = (parks, allParks) => {
+    if (!parks || !allParks) return;
+    // Shuffle parks for random order
+    const shuffled = [...parks].sort(() => Math.random() - 0.5);
+    setRemainingParks(shuffled);
+    setCurrentRound(0);
+    setScore(0);
+    setGameComplete(false);
+    loadQuestionForPark(shuffled[0], allParks);
+  };
+
+  const loadQuestionForPark = (correctPark, allParks) => {
+    // Get 3 random wrong answers from all parks (including decoys)
+    const wrongAnswers = allParks
+      .filter(park => park.id !== correctPark.id)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 3);
+
+    // Combine and shuffle
+    const options = [correctPark, ...wrongAnswers]
+      .sort(() => Math.random() - 0.5);
+
+    setQuestion({
+      correctPark,
+      options,
+    });
     setSelectedAnswer(null);
     setIsCorrect(null);
     setShowAnswer(false);
   };
 
   const handleAnswerSelect = (parkId) => {
-    if (showAnswer) return; // Don't allow changing answer after submission
+    if (showAnswer) return;
     setSelectedAnswer(parkId);
   };
 
@@ -34,14 +78,127 @@ export default function ParkGuesserDemo() {
     const correct = selectedAnswer === question.correctPark.id;
     setIsCorrect(correct);
     setShowAnswer(true);
+
+    if (correct) {
+      setScore(score + 1);
+    }
   };
 
-  if (!question) {
-    return <div>Loading...</div>;
+  const handleNextPark = () => {
+    const nextRound = currentRound + 1;
+
+    if (nextRound >= remainingParks.length) {
+      // Game complete!
+      setGameComplete(true);
+    } else {
+      setCurrentRound(nextRound);
+      loadQuestionForPark(remainingParks[nextRound], allParksData);
+    }
+  };
+
+  const handlePlayAgain = () => {
+    startNewGame(parksData, allParksData);
+  };
+
+  if (error) {
+    return (
+      <div className="error-container">
+        <p>{error}</p>
+        <style jsx>{`
+          .error-container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+            color: #ef4444;
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  if (!question || !parksData) {
+    return <div>Loading parks data...</div>;
+  }
+
+  // Game complete screen
+  if (gameComplete) {
+    const percentage = Math.round((score / remainingParks.length) * 100);
+    return (
+      <div className="game-container">
+        <div className="game-complete">
+          <h1 className="complete-title">Game Complete! 🎉</h1>
+          <div className="score-display">
+            <div className="score-big">{score} / {remainingParks.length}</div>
+            <div className="score-percentage">{percentage}% Correct</div>
+          </div>
+          <button onClick={handlePlayAgain} className="play-again-button">
+            Play Again
+          </button>
+        </div>
+
+        <style jsx>{`
+          .game-complete {
+            max-width: 500px;
+            margin: 60px auto;
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          }
+
+          .complete-title {
+            color: #333;
+            margin-bottom: 32px;
+            font-size: 32px;
+          }
+
+          .score-display {
+            margin-bottom: 32px;
+          }
+
+          .score-big {
+            font-size: 64px;
+            font-weight: bold;
+            color: #0070f3;
+            margin-bottom: 8px;
+          }
+
+          .score-percentage {
+            font-size: 24px;
+            color: #666;
+          }
+
+          .play-again-button {
+            padding: 16px 48px;
+            font-size: 18px;
+            font-weight: 600;
+            background: #0070f3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+          }
+
+          .play-again-button:hover {
+            background: #0051cc;
+          }
+        `}</style>
+      </div>
+    );
   }
 
   return (
     <div className="game-container">
+      <div className="progress-bar">
+        <div className="progress-info">
+          <span>Question {currentRound + 1} of {remainingParks.length}</span>
+          <span>Score: {score}</span>
+        </div>
+      </div>
+
       <div className="park-image-container">
         <img
           src={question.correctPark.imageUrl}
@@ -51,6 +208,12 @@ export default function ParkGuesserDemo() {
       </div>
 
       <h2 className="question-title">Which National Park is this?</h2>
+
+      {!showAnswer && (
+        <div className="hint-section">
+          <HintButton parkName={question.correctPark.name} hideAnswer />
+        </div>
+      )}
 
       <div className="options-container">
         {question.options.map((park) => (
@@ -96,16 +259,9 @@ export default function ParkGuesserDemo() {
               ✗ Incorrect. The correct answer is {question.correctPark.name}.
             </p>
           )}
-          <button onClick={loadNewQuestion} className="next-button">
+          <button onClick={handleNextPark} className="next-button">
             Next Park
           </button>
-        </div>
-      )}
-
-      {!showAnswer && (
-        <div className="hint-section">
-          <p className="hint-label">Need help?</p>
-          <HintButton parkName={question.correctPark.name} hideAnswer />
         </div>
       )}
 
@@ -114,6 +270,22 @@ export default function ParkGuesserDemo() {
           max-width: 700px;
           margin: 0 auto;
           padding: 20px;
+        }
+
+        .progress-bar {
+          margin-bottom: 24px;
+          padding: 16px;
+          background: #f5f5f5;
+          border-radius: 8px;
+        }
+
+        .progress-info {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 16px;
+          font-weight: 600;
+          color: #333;
         }
 
         .park-image-container {
@@ -242,15 +414,8 @@ export default function ParkGuesserDemo() {
         }
 
         .hint-section {
-          margin-top: 32px;
-          padding-top: 24px;
-          border-top: 1px solid #ddd;
-        }
-
-        .hint-label {
-          margin-bottom: 12px;
-          color: #666;
-          font-size: 14px;
+          margin-bottom: 24px;
+          text-align: center;
         }
       `}</style>
     </div>
