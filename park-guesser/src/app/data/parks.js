@@ -6,7 +6,10 @@ export async function fetchParksData() {
       throw new Error('Failed to fetch parks data');
     }
     const data = await response.json();
-    return data.parks;
+    return {
+      parks: data.parks,      // Parks with images
+      allParks: data.allParks // All parks (including decoys)
+    };
   } catch (error) {
     console.error('Error fetching parks:', error);
     throw error;
